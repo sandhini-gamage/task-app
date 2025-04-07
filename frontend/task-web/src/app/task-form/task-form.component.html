@@ -1,0 +1,36 @@
+<div class="form-container">
+    <h2>{{ isEditMode ? 'Edit Task' : 'Add Task' }}</h2>
+    <form [formGroup]="taskForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="fill">
+            <mat-label>Title</mat-label>
+            <input matInput formControlName="title" required>
+            <mat-error *ngIf="taskForm.get('title')?.hasError('required')">Title is required</mat-error>
+            <mat-error *ngIf="taskForm.get('title')?.hasError('maxlength')">Max length is 100</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+            <mat-label>Description</mat-label>
+            <textarea matInput formControlName="description"></textarea>
+            <mat-error *ngIf="taskForm.get('description')?.hasError('maxlength')">Max length is 500</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+                <mat-option value="TO_DO">To Do</mat-option>
+                <mat-option value="IN_PROGRESS">In Progress</mat-option>
+                <mat-option value="DONE">Done</mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" *ngIf="isEditMode">
+            <mat-label>Created At</mat-label>
+            <input matInput formControlName="createdAt" [disabled]="true">
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="!taskForm.valid">
+            {{ isEditMode ? 'Save Changes' : 'Create Task' }}
+        </button>
+        <button mat-raised-button color="warn" type="button" (click)="cancel()">Cancel</button>
+    </form>
+</div>

@@ -1,48 +1,68 @@
+<mat-toolbar color="primary">
+  <span class="app-title">TASK APP</span>
+  <span class="spacer"></span>
+  <button mat-raised-button color="accent" (click)="addTask()">
+      <mat-icon>add</mat-icon> Add Task
+  </button>
+</mat-toolbar>
 
-<div class="container" style="width: 850px; margin-top: 20px; margin-left: 30px;">
-    <h1 style="color: blueviolet; text-align: center;"><strong>TASK APP</strong></h1>
-        <br>
-            <mat-form-field style="width: 175px;">
-                <input matInput placeholder="Enter Title" [(ngModel)]="task.title" type="text">
-            </mat-form-field>
-            <mat-form-field style="width: 175px; margin-left: 20px;">
-                <input matInput placeholder="Enter Description"[(ngModel)]="task.description" type="text">
-            </mat-form-field>
-            <mat-form-field style="width: 175px; margin-left: 20px;">
-                <input matInput placeholder="Enter Status" type="text" [(ngModel)]="task.status">
-            </mat-form-field>
-            <button mat-flat-button (click)="addOrEditTask(task)" style="margin-left: 20px;">Add Task</button>
-            <button mat-flat-button style="margin-left: 20px; background-color: brown;">Cancle</button>
-          <br>
+<div class="container">
+  <!-- Filter -->
+  <mat-form-field appearance="fill" class="filter-field">
+      <mat-label>Filter by Status</mat-label>
+      <mat-select [(ngModel)]="statusFilter" (selectionChange)="applyFilter()">
+          <mat-option value="">All</mat-option>
+          <mat-option value="TO_DO">To Do</mat-option>
+          <mat-option value="IN_PROGRESS">In Progress</mat-option>
+          <mat-option value="DONE">Done</mat-option>
+      </mat-select>
+  </mat-form-field>
 
-        <table mat-table [dataSource]="dataSource" class="mat-elevation-z8" style="margin-top: 50px;">
+  <!-- Task Table -->
+  <table mat-table [dataSource]="filteredDataSource" class="mat-elevation-z8">
+      <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef> Title </th>
+          <td mat-cell *matCellDef="let task"> {{ task.title }} </td>
+      </ng-container>
 
-            <ng-container matColumnDef="title">
-              <th mat-header-cell *matHeaderCellDef> Title </th>
-              <td mat-cell *matCellDef="let task"> {{task.title}} </td>
-            </ng-container>
-          
-            <ng-container matColumnDef="description">
-              <th mat-header-cell *matHeaderCellDef> Description </th>
-              <td mat-cell *matCellDef="let task"> {{task.description}} </td>
-            </ng-container>
-          
-            <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef> Status </th>
-              <td mat-cell *matCellDef="let task"> {{task.status}} </td>
-            </ng-container>
+      <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef> Description </th>
+          <td mat-cell *matCellDef="let task"> {{ task.description }} </td>
+      </ng-container>
 
-            <ng-container matColumnDef="edit">
-              <th mat-header-cell *matHeaderCellDef> Edit </th>
-              <td mat-cell *matCellDef="let task"><button (click)="setTask(task)"  mat-flat-button style="height:27px; width:auto;">Edit</button> </td>
-            </ng-container>
+      <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef> Status </th>
+          <td mat-cell *matCellDef="let task">
+              <span class="status-badge" [ngClass]="getStatusClass(task.status)">
+                  {{ task.status }}
+              </span>
+          </td>
+      </ng-container>
 
-            <ng-container matColumnDef="delete">
-              <th mat-header-cell *matHeaderCellDef> Delete </th>
-              <td mat-cell *matCellDef="let task"><button (click)="deleteTask(task.id)" color="warn" mat-flat-button style="background-color: brown; height:27px; width:auto;">Delete</button> </td>
-            </ng-container>
-          
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let tasks; columns: displayedColumns;"></tr>
-          </table>
+      <ng-container matColumnDef="edit">
+          <th mat-header-cell *matHeaderCellDef> Edit </th>
+          <td mat-cell *matCellDef="let task">
+              <button mat-icon-button color="primary" [routerLink]="['/edit-task', task.id]" aria-label="Edit task">
+                  <mat-icon>edit</mat-icon>
+              </button>
+          </td>
+      </ng-container>
+
+      <ng-container matColumnDef="delete">
+          <th mat-header-cell *matHeaderCellDef> Delete </th>
+          <td mat-cell *matCellDef="let task">
+              <button mat-icon-button color="warn" (click)="deleteTask(task.id)" aria-label="Delete task">
+                  <mat-icon>delete</mat-icon>
+              </button>
+          </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let task; columns: displayedColumns;" [ngClass]="{'alternate-row': task.id && (dataSource.data.indexOf(task) % 2 === 0)}"></tr>
+
+      <!-- Empty State -->
+      <tr class="mat-row" *ngIf="!filteredDataSource?.data?.length">
+          <td class="mat-cell" colspan="5">No tasks found.</td>
+      </tr>
+  </table>
 </div>

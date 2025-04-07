@@ -1,80 +1,101 @@
 import { AfterViewInit, Component } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { Task } from '../task';
 import { TaskService } from '../task.service';
 import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { FormsModule } from '@angular/forms';
+
 @Component({
-  selector: 'app-home',
-  imports: [MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, MatTableModule
-    , CommonModule, FormsModule
-  ],
-  templateUrl: './home.component.html',
-  styleUrl: './home.component.css'
+    selector: 'app-home',
+    standalone: true,
+    imports: [
+        CommonModule,
+        RouterModule,
+        FormsModule,
+        MatButtonModule,
+        MatTableModule,
+        MatSnackBarModule,
+        MatToolbarModule,
+        MatIconModule,
+        MatFormFieldModule,
+        MatSelectModule
+    ],
+    templateUrl: './home.component.html',
+    styleUrls: ['./home.component.css']
 })
-export class HomeComponent implements AfterViewInit{
-  displayedColumns: string[] = ['title', 'description', 'status', 'edit', 'delete'];
-  dataSource = new MatTableDataSource<Task>();
+export class HomeComponent implements AfterViewInit {
+    displayedColumns: string[] = ['title', 'description', 'status', 'edit', 'delete'];
+    dataSource = new MatTableDataSource<Task>();
+    filteredDataSource = new MatTableDataSource<Task>();
+    statusFilter: string = '';
 
-  constructor(private taskService : TaskService) {}
+    constructor(
+        private taskService: TaskService,
+        private router: Router,
+        private snackBar: MatSnackBar
+    ) {}
 
-  tasks:Task[] = [];
-  task: Task = {
-    id: 0,
-    title: '', 
-    description: '', 
-    status: '',
-  }
-
-  ngAfterViewInit() : void {
-   this.taskService.fetchAllTasks().subscribe((data) => {
-      this.tasks = data;
-      this.dataSource = new MatTableDataSource<Task>(data);
-    })
-  }
-
-  addOrEditTask(tsk: Task) {
-    if (tsk.id!==0) {
-      this.taskService.updateTask(tsk).subscribe({
-        next: (data) => {
-          console.log('Task updated successfully:', data);
-          window.location.reload();
-        },
-        error: (error) => {
-          console.error('Error updating task:', error);
-        }
-      })
-    } else {
-      this.taskService.createTask(tsk).subscribe({
-        next: (data) => {
-          console.log('Task created successfully:', data);
-          window.location.reload();
-        },
-        error: (error) => {
-          console.error('Error creating task:', error);
-        }
-      })
+    ngAfterViewInit(): void {
+        this.taskService.fetchAllTasks().subscribe({
+            next: (data) => {
+                this.dataSource = new MatTableDataSource<Task>(data);
+                this.filteredDataSource = new MatTableDataSource<Task>(data);
+            },
+            error: (error) => {
+                console.error('Error fetching tasks:', error);
+                this.snackBar.open('Error fetching tasks', 'Close', { duration: 3000 });
+            }
+        });
     }
-  }
 
-  setTask(task:Task){
-    this.task.title = task.title;
-    this.task.description = task.description;
-    this.task.status = task.status;
-    this.task.id = task.id;
-  }
-
-  deleteTask(id: Number) {
-    const isConfirmed = confirm("Are you sure you want to delete this task?");
-    if (isConfirmed) {
-      this.taskService.deleteTask(id).subscribe((data) => {
-        this.tasks = this.tasks.filter((task) => task.id !== id);
-      })
-      window.location.reload();
+    applyFilter(): void {
+        if (this.statusFilter) {
+            this.filteredDataSource.data = this.dataSource.data.filter(task => task.status === this.statusFilter);
+        } else {
+            this.filteredDataSource.data = this.dataSource.data;
+        }
     }
-  }
+
+    addTask(): void {
+        console.log('Navigating to /add-task');
+        this.router.navigate(['/add-task']);
+    }
+
+    deleteTask(id: string | undefined): void {
+        if (id && confirm("Are you sure you want to delete this task?")) {
+            this.taskService.deleteTask(id).subscribe({
+                next: (response) => {
+                    this.snackBar.open(response, 'Close', { duration: 3000 });
+                    this.taskService.fetchAllTasks().subscribe((data) => {
+                        this.dataSource = new MatTableDataSource<Task>(data);
+                        this.applyFilter();
+                    });
+                },
+                error: (error) => {
+                    console.error('Error deleting task:', error);
+                    this.snackBar.open('Error deleting task', 'Close', { duration: 3000 });
+                }
+            });
+        }
+    }
+
+    getStatusClass(status: string): string {
+        switch (status) {
+            case 'TO_DO':
+                return 'status-to-do';
+            case 'IN_PROGRESS':
+                return 'status-in-progress';
+            case 'DONE':
+                return 'status-done';
+            default:
+                return '';
+        }
+    }
 }

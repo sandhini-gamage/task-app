@@ -1,29 +1,33 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Task } from './task';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class TaskService {
+    private apiUrl = 'http://localhost:8082/api/v1/tasks';
 
-    constructor(private _httpClient:HttpClient) { }
-    baseURL : String = "/api/v1/tasks";
+    constructor(private http: HttpClient) {}
 
-    fetchAllTasks() : Observable<Task[]> {
-      return this._httpClient.get<Task[]>(`${this.baseURL}`);
+    fetchAllTasks(): Observable<Task[]> {
+        return this.http.get<Task[]>(this.apiUrl);
     }
 
-    createTask(data: Task){
-      return this._httpClient.post<Task>(`${this.baseURL}`, data);
+    createTask(task: Task): Observable<Task> {
+        return this.http.post<Task>(this.apiUrl, task);
     }
 
-    updateTask(data: Task){
-      return this._httpClient.put<Task>(`${this.baseURL}/${data.id}`, data);
+    updateTask(task: Task): Observable<Task> {
+        return this.http.put<Task>(`${this.apiUrl}/${task.id}`, task);
     }
 
-    deleteTask(id: Number){
-      return this._httpClient.delete<Task>(`${this.baseURL}/${id}`);
+    deleteTask(id: string): Observable<string> {
+      return this.http.delete(`${this.apiUrl}/${id}`, { responseType: 'text' });
+  }
+
+    getTaskById(id: string): Observable<Task> {
+        return this.http.get<Task>(`${this.apiUrl}/${id}`);
     }
 }
